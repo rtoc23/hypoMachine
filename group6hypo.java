@@ -105,8 +105,8 @@ public class group6hypo
 	
 	// HW2 // List declarations
 	long RQ = EOL;
-	long OSFreeList = 6000;
-	long userFreeList = 3000;
+	long OSFreeList = EOL;
+	long userFreeList = EOL;
 	
 	// *****
 	// NAME : main()
@@ -268,6 +268,7 @@ public class group6hypo
 	// *****
 	public void initializeSystem()
 	{
+		// Set special registers to 0.
 		IR = 0;
 		SP = 0;
 		PC = 0;
@@ -275,12 +276,32 @@ public class group6hypo
 		MBR = 0;
 		PSR = 0;
 		CLOCK = 0;
-		
+
+		// Set GPRs to 0.
 		for(int i = 0; i < GPR.length; i++)
 			GPR[i] = 0;
-		
+
+		// Set all RAM addresses to 0.
 		for(int k = 0; k < RAM.length; k++)
 			RAM[k] = 0;
+
+		// Set userFreeList start address to 3000 (beginning of heap).
+		// Basically, set one big block in userFreeList.
+		userFreeList = 3000;
+		// Set the nextAddress field to EOL (only block in heap).
+		RAM[userFreeList] = EOL;
+		// Set the size of the block equal to 3000 (fills entire heap).
+		RAM[userFreeList + 1] = 3000;
+
+		// Set OSFreeList start address to 6000 (beginning of OS mem).
+		// Basically, set one big block in OSFreeList
+		OSFreeList = 6000;
+		// Set the nextAddress field to EOL (only block in OS mem).
+		RAM[OSFreeList] = EOL;
+		// Set the size of the block equal to 4000 (fills entire OS mem).
+		RAM[OSFreeList + 1] = 4000;
+
+		// createProcess(null program, 0 priority)
 	}
 	
 	// *****
