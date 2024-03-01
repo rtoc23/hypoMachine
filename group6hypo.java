@@ -266,6 +266,15 @@ public class group6hypo
 	// OUTP : N/A
 	// RTRN : N/A
 	// *****
+	// HW2 //
+	// *****
+	// NAME : initializeSystem() [revision]
+	// DESC : Initialize userFreeList, OSFreeList, and create null process.
+	// INPT : N/A
+	// OUTP : N/A 
+	// RTRN : N/A
+	// AUTH	: Ryan O'Connell
+	// *****
 	public void initializeSystem()
 	{
 		// Set special registers to 0.
@@ -289,17 +298,17 @@ public class group6hypo
 		// Basically, set one big block in userFreeList.
 		userFreeList = 3000;
 		// Set the nextAddress field to EOL (only block in heap).
-		RAM[userFreeList] = EOL;
+		RAM[(int)userFreeList] = EOL;
 		// Set the size of the block equal to 3000 (fills entire heap).
-		RAM[userFreeList + 1] = 3000;
+		RAM[(int)userFreeList + 1] = 3000;
 
 		// Set OSFreeList start address to 6000 (beginning of OS mem).
 		// Basically, set one big block in OSFreeList
 		OSFreeList = 6000;
 		// Set the nextAddress field to EOL (only block in OS mem).
-		RAM[OSFreeList] = EOL;
+		RAM[(int)OSFreeList] = EOL;
 		// Set the size of the block equal to 4000 (fills entire OS mem).
-		RAM[OSFreeList + 1] = 4000;
+		RAM[(int)OSFreeList + 1] = 4000;
 
 		// createProcess(null program, 0 priority)
 	}
