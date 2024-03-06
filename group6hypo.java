@@ -111,20 +111,20 @@ public class group6hypo
 	// *****
 	// NAME : main()
 	// DESC : Call for and catch program filename, Load program,
-	// 		  Assign program counter, Dump memory, Return output code.
+	// 	  Assign program counter, Dump memory, Return output code.
 	// INPT : Boolean value to determine if printed to console or file.
 	// OUTP : Printed output of program either to monitor or file.
 	// RTRN : OK - 0
 	//        HALT = 1
-	//		  OPENERROR = -1
-	// 		  BADADDRESS = -2
+	//	  OPENERROR = -1
+	// 	  BADADDRESS = -2
 	//        NOEND = -3
-	// 		  BADPC = -4
-	// 		  BADMODE = -5
-	//		  BADOPCODE = -6
-	//		  DIVBYZERO = -7
-	//		  STACKOVERFLOW = -8
-	//		  STACKUNDERFLOW = -9
+	// 	  BADPC = -4
+	// 	  BADMODE = -5
+	//	  BADOPCODE = -6
+	//	  DIVBYZERO = -7
+	//	  STACKOVERFLOW = -8
+	//	  STACKUNDERFLOW = -9
 	// *****
 	public int main(boolean toFile) throws Exception
 	{
@@ -190,14 +190,14 @@ public class group6hypo
 	// *****
 	// NAME : absoluteLoader()
 	// DESC : Take filename from user. See if it exists as a file,
-	// 		  load file content into main memory.
+	// 	  load file content into main memory.
 	// INPT : filename.txt
 	// OUTP : N/A
 	// RTRN : OK = 0 to 9999
-	//		  OPENERROR = -1
-	// 		  BADADDRESS = -2
+	//	  OPENERROR = -1
+	// 	  BADADDRESS = -2
 	//        NOEND = -3
-	// 		  BADPC = -4
+	// 	  BADPC = -4
 	// *****
 	public long absoluteLoader(String filename)
 	{
@@ -316,17 +316,17 @@ public class group6hypo
 	// *****
 	// NAME : CPU()
 	// DESC : Capture, decode, and execute lines of 
-	//		  filename.txt from absoluteLoader.
+	//	  filename.txt from absoluteLoader.
 	// INPT : N/A
 	// OUTP : N/A
 	// RTRN : OK = 0
 	//        HALT = 1
 	//        BADADDRESS = -2
-	//		  BADMODE = -3
-	//		  BADOPCODE = -6
-	//		  DIVBYZERO = -7
-	//		  STACKOVERFLOW = -8
-	//		  STACKUNDERFLOW = -9
+	//	  BADMODE = -3
+	//	  BADOPCODE = -6
+	//	  DIVBYZERO = -7
+	//	  STACKOVERFLOW = -8
+	//	  STACKUNDERFLOW = -9
 	// *****
 	public long CPU()
 	{
@@ -927,15 +927,15 @@ public class group6hypo
 	// *****
 	// NAME : fetchOperand()
 	// DESC : Get the address and value of an operand,
-	// 		  given the mode and register requested of it.
+	// 	  given the mode and register requested of it.
 	// INPT : operand mode (mode)
-	//		  operand register (register)
+	//	  operand register (register)
 	// OUTP : return code (array position 0)
-	//		  operand address (array position 1)
-	//		  operand value (array position 2)
+	//	  operand address (array position 1)
+	//	  operand value (array position 2)
 	// RTRN : OK = 0
 	//        BADADDRESS = -2
-	//		  BADMODE = -3
+	//	  BADMODE = -3
 	// *****
 	public long[] fetchOperand(long mode, long register)
 	{
@@ -1063,10 +1063,10 @@ public class group6hypo
 	// *****
 	// NAME : dumpMemory()
 	// DESC : Show the content of all memory,
-	// 		  Kind of like a print statement.
+	// 	  Kind of like a print statement.
 	// INPT : String of when function is executed (label)
-	//		  Starting address of when to print memory (startAddr)
-	//		  How much memory to dump (size)
+	//	  Starting address of when to print memory (startAddr)
+	//	  How much memory to dump (size)
 	// OUTP : N/A
 	// RTRN : N/A
 	// *****
@@ -1109,13 +1109,68 @@ public class group6hypo
 	// NAME : createProcess()
 	// DESC : Given a filename and priority, create a process
 	// INPT : String filename (filename),
-	//		  long priority (priority)
+	//	  long priority (priority)
 	// OUTP : N/A 
 	// RTRN : OK = 0
 	// AUTH	: Ryan O'Connell
 	// *****
 	public long createProcess(String filename, long priority)
 	{
+		// Call to allocate memory in OS block
+		// Size is 18 as PCB has 18 components
+		int currentPCBptr = allocateOSMemory(18);
+		
+		// If returned address is negative, error was thrown
+		// Return error code (no message needed)
+		if(currentPCBptr < 0)
+			return currentPCBptr;
+		
+		// Initialize PCB addresses to 0
+		// Set PID, default priority, state to ready, and nextAddr to EOL
+		initializePCB(currentPCBptr);
+		
+		// Attempt to load given program
+		long PCoutput = absoluteLoader(filename);
+		
+		// If returned address is negative, error was thrown
+		// Return error code (no message needed)
+		if(PCoutput < 0)
+			return PCoutput;
+		
+		// Allocate stack in user memory block
+		// Stack is always size 20
+		long stackPtr = allocateUserMemory(20);
+		
+		// If returned address is negative, error was thrown
+		// Free the already allocated OS memory
+		// (Begins at currentPCBptr, always size 18)
+		// Then return error code (no message needed)
+		if(stackPtr < 0)
+		{
+			// Free allocated PCB space
+			freeOSMemory(currentPCBptr, 18);
+			return(stackPtr);
+		}
+		
+		// Set Stack Pointer in PCB = stackPtr + stack size (static 20)
+		RAM[currentPCBptr + SPindex] = stackPtr + 20;
+		// Set StackStart addr in PCB = stackPtr
+		RAM[currentPCBptr + StackStart] = stackPtr;
+		// Set StackSize in PCB = stack size (static 20)
+		RAM[currentPCBptr + StackSize] = 20;
+		
+		// Set priority in PCB equal to priority in method call
+		RAM[currentPCBptr + Priority] = priority;
+		
+		// Dump program area
+		dumpMemory("Create process output:", currentPCBptr, 18);
+		
+		// Print PCB 
+		printPCB(currentPCBptr);
+		
+		// Insert PCB into Ready Queue
+		// insertPCBintoReadyQueue();
+		
 		return(OK);
 	}
 	
@@ -1124,7 +1179,7 @@ public class group6hypo
 	// NAME : initializePCB()
 	// DESC : Set all RAM addresses in PCB range to 0
 	// INPT : Int start location of PCB
-	//		  (int type prevents need for constant typecasting)
+	//	  (int type prevents need for constant typecasting)
 	// OUTP : N/A
 	// RTRN : N/A
 	// AUTH	: Ryan O'Connell
@@ -1155,7 +1210,7 @@ public class group6hypo
 	// NAME : printPCB()
 	// DESC : Print all elements of PCB list
 	// INPT : Int start position of PCB
-	//		  (int type prevents need for constant typecasting)
+	//	  (int type prevents need for constant typecasting)
 	// OUTP : Values of all PCB components
 	// RTRN : N/A
 	// AUTH	: Ryan O'Connell
@@ -1193,11 +1248,11 @@ public class group6hypo
 	// NAME : allocateOSMemory()
 	// DESC : Dedicate a block of memory from OS chunk (6000 - 9999)
 	// INPT : Int size of block requested
-	//		  (Int to prevent typcasting from long)
+	//	  (Int to prevent typcasting from long)
 	// OUTP : Error code or start address of allocated block
 	// RTRN : OK = >0 
-	// 		  NOSPACE = -10
-	//		  INVALIDSIZE = -11;
+	// 	  NOSPACE = -10
+	//	  INVALIDSIZE = -11;
 	// AUTH	: Ryan O'Connell
 	// *****
 	public long allocateOSMemory(int sizeRequest)
@@ -1308,10 +1363,10 @@ public class group6hypo
 	// NAME : allocateUserMemory()
 	// DESC : Dedicate a block of memory from User chunk (3000 - 5999)
 	// INPT : Int size of block requested
-	//		  (Int to prevent typcasting from long)
+	//	  (Int to prevent typcasting from long)
 	// OUTP : Error code or start address of allocated block
 	// RTRN : OK = >0 
-	// 		  NOSPACE = -10
+	// 	  NOSPACE = -10
 	// AUTH	: Ryan O'Connell
 	// *****
 	public long allocateUserMemory(int sizeRequest)
@@ -1413,6 +1468,108 @@ public class group6hypo
 		// If reached, no block of necessary size was found. Throw error
 		System.out.println("ERROR: No suitable block found in OS memory.");
 		return NOSPACE;
+	}
+
+	// HW2 // 
+	// *****
+	// NAME : freeOSMemory()
+	// DESC : Free [size] cells of memory beginning at RAM[ptr].
+	//	  This method handles OSMemory field, indexes 6000 - 9999.
+	// INPT : int ptr [start address of occupied memory, soon to be free block]
+	//	  (int type prevents need for constant typecasting)
+	//	  long size [length of occupied memory]
+	// OUTP : Output code
+	// RTRN : OK = 0
+	//        BADSPACE = 10
+	// 	  INVALIDSIZE = -11
+	// AUTH	: Ryan O'Connell
+	// *****
+	public long freeOSMemory(int ptr, long size)
+	{
+		// If start address is outside of valid OS memory range
+		// Throw invalid size error
+		if(ptr < 6000 || ptr > 9999)
+		{
+			System.out.println("ERROR: Memory size requested is invalid.");
+			return INVALIDSIZE;
+		}
+		
+		// Cannot allocate only one cell. Bump to two.
+		if(size == 1)
+		{
+			size = 2;
+		}
+		
+		// If size is invalid (<0 or overflows OS memory)
+		// Throw invalid size error
+		else if(size < 1 || ptr + size >= 9999)
+		{
+			System.out.println("ERROR: Memory size requested is invalid.");
+			return INVALIDSIZE;
+		}
+		
+		// Insert the freed PCB into the beginning of the OS memory field
+		
+		// PCBNextAddress = the current start of the OSFreeList
+		RAM[ptr] = OSFreeList;
+		// PCBSize = the size asked to be freed by user
+		RAM[ptr + 1] = size;
+		// The new OSFreeList start index is the recently inserted PCB start index
+		OSFreeList = ptr;
+		
+		// All went well
+		return(OK);
+	}
+	
+	// HW2 // 
+	// *****
+	// NAME : freeUserMemory()
+	// DESC : Free [size] cells of memory beginning at RAM[ptr]. 
+	//	  This method handles userMemory field, indexes 3000 - 5999.
+	// INPT : int ptr [start address of occupied memory, soon to be free block]
+	//	  (int type prevents need for constant typecasting)
+	//	  long size [length of occupied memory]
+	// OUTP : Output code
+	// RTRN : OK = 0
+	//        BADSPACE = 10
+	// 	  INVALIDSIZE = -11
+	// AUTH	: Ryan O'Connell
+	// *****
+	public long freeOSMemory(int ptr, long size)
+	{
+		// If start address is outside of valid user memory range
+		// Throw invalid size error
+		if(ptr < 3000 || ptr > 5999)
+		{
+			System.out.println("ERROR: Memory size requested is invalid.");
+			return INVALIDSIZE;
+		}
+		
+		// Cannot allocate only one cell. Bump to two.
+		if(size == 1)
+		{
+			size = 2;
+		}
+		
+		// If size is invalid (<0 or overflows free memory)
+		// Throw invalid size error
+		else if(size < 1 || ptr + size >= 5999)
+		{
+			System.out.println("ERROR: Memory size requested is invalid.");
+			return INVALIDSIZE;
+		}
+		
+		// Insert the freed PCB into the beginning of the free memory field
+		
+		// PCBNextAddress = the current start of the userFreeList
+		RAM[ptr] = userFreeList;
+		// PCBSize = the size asked to be freed by user
+		RAM[ptr + 1] = size;
+		// The new userFreeList start index is the recently inserted PCB start index
+		userFreeList = ptr;
+		
+		// All went well
+		return(OK);
 	}
 }
 
