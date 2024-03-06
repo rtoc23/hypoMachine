@@ -1118,7 +1118,7 @@ public class group6hypo
 	{
 		// Call to allocate memory in OS block
 		// Size is 18 as PCB has 18 components
-		int currentPCBptr = allocateOSMemory(18);
+		int currentPCBptr = (int)allocateOSMemory(18);
 		
 		// If returned address is negative, error was thrown
 		// Return error code (no message needed)
@@ -1535,7 +1535,7 @@ public class group6hypo
 	// 	  INVALIDSIZE = -11
 	// AUTH	: Ryan O'Connell
 	// *****
-	public long freeOSMemory(int ptr, long size)
+	public long freeUserMemory(int ptr, long size)
 	{
 		// If start address is outside of valid user memory range
 		// Throw invalid size error
