@@ -1720,5 +1720,32 @@ public class group6hypo
 		// Return OK when out of PCBs.
 		return(OK);
 	}
+
+	// HW2 // 
+	// *****
+	// NAME : selectFirstFromRQ()
+	// DESC : Take the first process from the ready queue and have it enter running state
+	// INPT : N/A
+	// OUTP : N/A
+	// RTRN : currentPCBptr (PCB start address)
+	// AUTH	: Ryan O'Connell
+	// *****
+	public long selectFirstFromRQ()
+	{
+		// Get the first PCB start address, which begins at RQ
+		// (int to avoid typcasting)
+		int currentPCBptr = (int)RQ;
+		
+		// If it isn't EOL, take it out of the list
+		if(RQ != EOL)
+			// Update RQ to start at next PCB
+			RQ = RAM[currentPCBptr + NextAddress];
+		
+		// Update the current PCB's next address to point to EOL
+		RAM[currentPCBptr + NextAddress] = EOL;
+		
+		// Return start address
+		return currentPCBptr;
+	}
 }
 
