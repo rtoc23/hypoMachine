@@ -105,6 +105,7 @@ public class group6hypo
 	
 	// HW2 // List declarations
 	long RQ = EOL;
+	long WQ = EOL;
 	long OSFreeList = EOL;
 	long userFreeList = EOL;
 	
@@ -1650,7 +1651,40 @@ public class group6hypo
 		RAM[previousPCBptr + NextAddress] = PCBptr;
 		return(OK);
 	}
-
+	
+	// HW2 // 
+	// *****
+	// NAME : insertPCBintoWaitQueue()
+	// DESC : Insert a PCB beginning at PCBptr at position one in WQ
+	// INPT : int PCBptr denotes beginning address of PCB to be inserted
+	//		  (int type prevents need for constant typecasting)
+	// OUTP : Output code
+	// RTRN : OK = 0
+	// 		  INVALIDSIZE = -11
+	// AUTH	: Ryan O'Connell
+	// *****
+	public long insertPCBintoWaitQueue(int PCBptr)
+	{
+		// Insertion PCB always gets to go first.
+		// If PCB start address is out of range (not in heap or OS mem)
+		// Throw invalid size error, then return
+		if(PCBptr < 3000 || PCBptr > 9999)
+		{
+			System.out.println("ERROR: Memory size requested is invalid.");
+			return INVALIDSIZE;
+		}
+		
+		// Set the PCB state to Waiting
+		RAM[PCBptr + State] = WaitState;
+		// Set inserted PCB's next address to EOL
+		RAM[PCBptr + NextAddress] = WQ;
+		
+		// Update WQ to begin at PCB start address, then return
+		WQ = PCBptr;
+		
+		return(OK);
+	}
+	
 	// HW2 // 
 	// *****
 	// NAME : printGivenQueue()
