@@ -1169,7 +1169,7 @@ public class group6hypo
 		printPCB(currentPCBptr);
 		
 		// Insert PCB into Ready Queue
-		// insertPCBintoReadyQueue();
+		insertPCBintoReadyQueue(currentPCBptr);
 		
 		return(OK);
 	}
@@ -1569,6 +1569,85 @@ public class group6hypo
 		userFreeList = ptr;
 		
 		// All went well
+		return(OK);
+	}
+
+	// HW2 // 
+	// *****
+	// NAME : insertPCBintoReadyQueue()
+	// DESC : Insert a PCB beginning at PCBptr into RQ
+	// INPT : int PCBptr denotes beginning address of PCB to be inserted
+	//	  (int type prevents need for constant typecasting)
+	// OUTP : Output code
+	// RTRN : OK = 0
+	//	  BADSPACE = 10
+	// 	  INVALIDSIZE = -11
+	// AUTH	: Ryan O'Connell
+	// *****
+	public long insertPCBintoReadyQueue(int PCBptr)
+	{
+		int previousPCBptr = EOL;
+		int currentPCBptr = (int)RQ;
+		
+		// If size is invalid (<0 or overflows free memory)
+		// Throw invalid size error
+		if(PCBptr < 6000 || PCBptr > 9999)
+		{
+			System.out.println("ERROR: Memory size requested is invalid.");
+			return INVALIDSIZE;
+		}
+		
+		// Set process state to ready
+		RAM[PCBptr + State] = ReadyState;
+		// Set the next process pointer address to EOL
+		RAM[PCBptr + NextAddress] = EOL;
+		
+		// If RQ is EOL...
+		if(RQ == EOL)
+		{
+			// Then RQ is empty. Insert PCB into slot one and exit
+			RQ = PCBptr;
+			return(OK);
+		}
+		
+		// Otherwise, while the currentPCBptr isn't EOL...
+		// (While we still have PCBs to look through)
+		while(currentPCBptr != EOL)
+		{
+			// If the insertion PCB has a higher priority than the index PCB...
+			if(RAM[PCBptr + Priority] > RAM[currentPCBptr + Priority])
+			{
+				// And the previous PCB's address was EOL...
+				if(previousPCBptr == EOL)
+				{
+					// We're still at the start of the list. Enter PCB at start.
+					// Change the insertion PCB's next address to the current RQ address
+					RAM[PCBptr + NextAddress] = RQ;
+					// Update RQ address to insertion PCB address. Then return
+					RQ = PCBptr;
+					return(OK);
+				}
+				// Otherwise, we insert in the middle of the list.
+				else
+				{
+					// Set the insertion PCB's next address equal to the previous PCB's next address
+					RAM[PCBptr + NextAddress] = RAM[previousPCBptr + NextAddress];
+					// Set the previous PCB's next address to the insertion PCB's start address. Then return
+					RAM[previousPCBptr + NextAddress] = PCBptr;
+					return(OK);
+				}
+			}
+			// Otherwise, go to the next PCB to check priority.
+			else
+			{
+				previousPCBptr = currentPCBptr;
+				currentPCBptr = (int)RAM[currentPCBptr + NextAddress];
+			}
+		}
+		
+		// If reached, reached end of list.
+		// Add insertion PCB at end of list. No need to update next address. Then return
+		RAM[previousPCBptr + NextAddress] = PCBptr;
 		return(OK);
 	}
 }
