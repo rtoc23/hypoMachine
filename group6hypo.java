@@ -1650,5 +1650,41 @@ public class group6hypo
 		RAM[previousPCBptr + NextAddress] = PCBptr;
 		return(OK);
 	}
+
+	// HW2 // 
+	// *****
+	// NAME : printGivenQueue()
+	// DESC : Given a queue start address, print PCBs in queue.
+	// INPT : int queuePtr [start address of occupied memory, soon to be free block]
+	//		  (int type prevents need for constant typecasting)
+	// OUTP : Given queue contents.
+	// RTRN : OK = 0
+	// AUTH	: Ryan O'Connell
+	// *****
+	public long printGivenQueue(int queuePtr)
+	{
+		// First PCB starts at the start address of the given queue.
+		int currentPCBptr = queuePtr;
+		
+		// If the first PCB has no next address, the queue is empty.
+		if(currentPCBptr == EOL)
+		{
+			// Display the queue is empty, then return.
+			System.out.println("Given queue contains no PCBs.");
+			return(OK);
+		}
+		
+		// Otherwise, while the current PCB doesn't point to EOL...
+		while(currentPCBptr != EOL)
+		{
+			// Print the PCB.
+			printPCB(currentPCBptr);
+			// Set the currentPCBptr equal to the next address pointer.
+			currentPCBptr = (int)RAM[currentPCBptr + NextAddress];
+		}
+		
+		// Return OK when out of PCBs.
+		return(OK);
+	}
 }
 
