@@ -1775,5 +1775,32 @@ public class group6hypo
 		// Save the program counter
 		RAM[PCBptr + PCindex] = PC;
 	}
+
+	// HW2 // 
+	// *****
+	// NAME : dispatcher() [restoreContext()]
+	// DESC : Restore the context of a past process
+	// INPT : int PCBptr [start position of PCB where context is saved]
+	// OUTP : N/A
+	// RTRN : N/A
+	// AUTH	: Ryan O'Connell
+	// *****
+	public void dispatcher(int PCBptr)
+	{
+		// Assume PCBptr is a valid addr.
+		// Function is the inverse of saveContext()
+		
+		// Restore context of GPRs from PCB GPR fields
+		for(int i = 0; i < 8; i++)
+			GPR[i] = RAM[PCBptr + 7 + i];
+		
+		// Restore the stack pointer
+		SP = RAM[PCBptr + SPindex];
+		// Restore the program counter
+		PC = RAM[PCBptr + PCindex];
+		
+		// Set system to UserMode [2]
+		PSR = UserMode;
+	}
 }
 
