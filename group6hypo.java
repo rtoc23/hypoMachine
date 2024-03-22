@@ -1802,5 +1802,28 @@ public class group6hypo
 		// Set system to UserMode [2]
 		PSR = UserMode;
 	}
+
+	// HW2 // 
+	// *****
+	// NAME : terminateProcess()
+	// DESC : Terminate a process by recovering its stack and PCB areas
+	// INPT : int PCBptr [start position of PCB to be terminated]
+	// OUTP : N/A
+	// RTRN : N/A
+	// AUTH	: Ryan O'Connell
+	// *****
+	public void terminateProcess(int PCBptr)
+	{
+		// Recover all positions in the PCB's stack
+		// PCBptr + StackStart = start address of the stack
+		// Each i afterward is the next position in the stack, up to this PCB's StackSize
+		for(int i = 0; i < RAM[PCBptr + StackSize]; i++)
+			RAM[PCBptr + StackStart + i] = 0;
+		
+		// Recover all positions in the PCB
+		// There are 18 values held in each PCB, so wipe 18 positions from start
+		for(int k = 0; k < 18; k++)
+			RAM[PCBptr + k] = 0; 
+	}
 }
 
