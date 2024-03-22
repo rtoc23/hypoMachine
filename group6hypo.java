@@ -1749,5 +1749,31 @@ public class group6hypo
 		// Return start address
 		return currentPCBptr;
 	}
+
+	// HW2 // 
+	// *****
+	// NAME : saveContext()
+	// DESC : Save the context of the running process so we can pick up later
+	// INPT : int PCBptr [start position of PCB saving the context]
+	// OUTP : N/A
+	// RTRN : N/A
+	// AUTH	: Ryan O'Connell
+	// *****
+	public void saveContext()
+	{
+		// Assume PCBptr is a valid addr.
+		
+		// Save context of GPRs to PCB GPR fields
+		// PCB GPR fields begin at index 7 of the PCB, thus the "+7."
+		// e.g., RAM[PCBptr + 7 + 0] means PCB[GPR0], and is set equal to GPR[0]
+		//		 RAM[PCBptr + 7 + 1] means PCB[GPR1], and is set equal to GPR[1], etc.
+		for(int i = 0; i < 8; i++)
+			RAM[PCBptr + 7 + i] = GPR[i];
+		
+		// Save the stack pointer
+		RAM[PCBptr + SPindex] = SP;
+		// Save the program counter
+		RAM[PCBptr + PCindex] = PC;
+	}
 }
 
