@@ -337,7 +337,8 @@ public class group6hypo
 		while(PC >= 0)
 		{
 			// If PC address is valid...
-			if(PC < 10000 && PC > -1)
+			// (Within program area - 0 to 2999)
+			if(PC < 3000 && PC > -1)
 			{
 				// Move PC address into MAR
 				MAR = PC;
@@ -703,11 +704,12 @@ public class group6hypo
 				// BRANCH
 				case 6:
 					// This is a one instruction command
-					// Will need access only to an address [0000 - 9999]
+					// Will need access only to an address [0000 - 2999]
+					// (Within program area)
 					// -------------------------------------------------
 					
 					// If address is valid, jump to value in that address
-					if(PC < 10000 && PC > -1)
+					if(PC < 3000 && PC > -1)
 						PC = RAM[(int)PC];
 					else
 					{
