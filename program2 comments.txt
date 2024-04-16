@@ -1,0 +1,92 @@
+// PROGRAM 2
+// [Push/pop]
+
+// ************* //
+// Assembly Code // 
+// ************* //
+
+	function
+start	mov		R3,11		// repeat this operation 11 times, store in R3
+	mov		R4,1000		// store value to be pushed/popped
+				
+					// BEGIN LOOP:
+loop	push		R4		// push R4 10 times 
+	push		R4		
+	push		R4
+	push		R4
+	push		R4
+	push		R4
+	push		R4
+	push		R4
+	push		R4
+	push		R4
+	pop				// pop stack value ten times
+	pop
+	pop
+	pop
+	pop
+	pop
+	pop
+	pop
+	pop
+	pop
+	subt		R3,1		// decrement counter by 1
+	add		R4,1		// increase R4 value by 1 to count loop
+	brOnPlus	R3,loop		// if R3 > 0, go again
+					// END LOOP
+
+stop	halt				// halt inst
+	end		start		// end, PC = start
+
+
+// ************* //
+// Symbol Table  // 
+// ************* //
+
+-----------------
+| symbol | addr	|
+-----------------
+| start	 | 50	|
+| loop	 | 54	|
+| stop	 | 80	|
+-----------------
+
+// ************* //
+// Machine Code  // 
+// ************* //
+// MC BEGINS AT ADDR. 50, SINCE...
+// ADDR. 0-9 ARE USED BY NULL PROCESS
+// ADDR. 10-49 ARE USED BY PROGRAM 1
+
+50	51360	// move 11 into GPR3 [variable M]
+51	11	// constant, 11
+52	51460	// move 1000 into GPR4 [4-digit value]
+53	1000	// constant, 1000
+54	101400	// push R4 (1)
+55	101400	// push R4 (2)
+56	101400	// push R4 (3)
+57	101400	// push R4 (4)
+58	101400	// push R4 (5)
+59	101400	// push R4 (6)
+60	101400	// push R4 (7)
+61	101400	// push R4 (8)
+62	101400	// push R4 (9)
+63	101400	// push R4 (10)
+64	111500	// pop to R5 (1)
+65	111500	// pop to R5 (2)
+66	111500	// pop to R5 (3)
+67	111500	// pop to R5 (4)
+68	111500	// pop to R5 (5)
+69	111500	// pop to R5 (6)
+70	111500	// pop to R5 (7)
+71	111500	// pop to R5 (8)
+72	111500	// pop to R5 (9)
+73	111500	// pop to R5 (10)
+74	21360	// subtract 1 from GPR3
+75	1	// constant, 1
+76	11460	// add 1 to GPR4
+77	1	// constant, 1
+78	81300	// if GPR3 > 0, loop
+79	54
+80	0	// HALT
+-1	50	// PC = 50

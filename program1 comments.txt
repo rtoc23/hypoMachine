@@ -1,0 +1,79 @@
+// PROGRAM 1
+// [Alternating pos/neg figures]
+
+// ************* //
+// Assembly Code // 
+// ************* //
+
+	function
+R	long		4		// create var R with value 4
+M	long		8		// create var M with value 8
+size	long		150		// create var size with value 150
+
+start	mov		R2,size		// move size into GPR2
+	sysCall		4		// call system call input 4 - allocate memory, uses GPR1 and 2
+	brOnMinus	R0,stop		// error handling, skip func if GPR0 holds an error return
+	mov		R5,R1		// copy GPR1 (start addr) into GPR5
+	mov		R4,size		// copy size into GPR4
+	mov		R3,R		// move R content into GPR3
+					
+					// BEGIN LOOP:
+loop	mul		R3,M		// GPR3 = R x M
+	mul		M,-1		// M = M x -1
+	mov		(R5)++,R3	// move GPR3 into GPR5, increment GPR5
+	sub		R4,1		// GPR4 = GPR4--
+	brOnPlus	R4,loop		// if GPR4 > 0, goto loop
+					// END LOOP
+
+	mov		R1,R5		// get start address
+	sysCall		5		// call system call input 5 - free memory
+stop	halt				// halt instruction
+	end		start		// PC = 3
+
+// ************* //
+// Symbol Table  // 
+// ************* //
+
+-----------------
+| symbol | addr	|
+-----------------
+| R	 | 10	|
+| M	 | 11	|
+| size	 | 12	|
+| start	 | 13	|
+| loop	 | 23	|
+| stop	 | 35	|
+-----------------
+
+// ************* //
+// Machine Code  // 
+// ************* //
+// MC BEGINS AT ADDR. 10, SINCE ADDR. 0-9 ARE USED BY NULL PROCESS
+
+10 	4	// long R = 4
+11	8	// long M = 8
+12	150	// long size = 150
+13	51250	// move size into GPR2
+14	12	// size addr.
+15	124000	// system call - allocate memory
+16	71000	// branch on minus - if sys call output code (stored in GPR0) is negative
+17	35	// goto line 35 (error handle)
+18	51511	// move GPR1 content (start addr.) into GPR5
+19	51450	// move size into GPR4
+20	12	// size addr.
+21	51350	// move R into GPR3
+22	10	// R addr.
+23	31350	// GPR3 = GPR3 x M
+24	11	// M addr.
+25	35060	// M = M x -1
+26	11	// M addr.
+27	-1	// constant, -1
+28	53513	// move GPR3 into GPR5 addr., then increment GPR5
+29	21460	// GPR4 = GPR4--
+30	1	// constant, 1
+31	81400	// branch on plus, if GPR4 > 0
+32	21	// goto 21 (loop)
+33	51115	// move R5 into R1, start addr. for freeing
+34	125000	// system call - free memory (uses GPR1 for start addr. GPR2 for size)
+35	0	// halt
+-1	13	// PC start addr. is 13

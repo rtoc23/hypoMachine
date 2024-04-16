@@ -1,0 +1,96 @@
+// PROGRAM 3
+// [I/O operations]
+
+// ************* //
+// Assembly Code // 
+// ************* //
+
+	function
+start	mov		R3,9		// character count per word is 9
+	mov		R2,10		// size of memory to be allocated in memory
+	sysCall		4		// allocate memory with size R2 (10)
+	brOnMinus	R0,exit1	// if an error with allocation, go to end
+	mov		R5,R1		// copy start addr. into R5
+	mov 		R6,R5		// malleable copy
+
+					// BEGIN LOOP1:
+loop1	sysCall		8		// ioGetC - get character
+	brOnMinus	R0,exit2	// if ioGetC throws error, release mem and quit
+	mov		(R5)++,R1	// insert retrieved character into R5, then increment
+	sub		R3,1		// decrement counter by 1
+	brOnPlus	R3,loop1	// if R3 > 0, get another character
+					// END LOOP1
+
+	mov		R3,9		// reset R3 value
+	mov 		R5,R6		// reset R5 value
+	mov 		R1,(R5)++	// insert address into R1
+
+					// BEGIN LOOP2:
+loop2	sysCall		9		// ioPutC - print character
+	brOnMinus	R0,exit2	// if ioPutC throws error, release mem and quit
+	mov		R1,(R5)++	// move the next R5 address into R1
+	sub		R3,1		// decrement counter by 1
+	brOnPlus	R3,loop2	// if R3 > 0, print another character
+					// END LOOP2
+	
+	mov		R1,R6		// put addr. start in R1 for memory freeing
+exit2	sysCall		5		// exit2 handle: release memory
+exit1	halt				// halt instruction
+	end		start		// PC = 100
+	
+
+// ************* //
+// Symbol Table  // 
+// ************* //
+
+-----------------
+| symbol | addr	|
+-----------------
+| start	 | 100	|
+| loop1	 | 109	|
+| loop2  | 121	|
+| exit1  | 129	|
+| exit2	 | 131	|
+-----------------
+
+// ************* //
+// Machine Code  // 
+// ************* //
+// MC BEGINS AT ADDR. 100, SINCE...
+// ADDR. 0-9 ARE USED BY NULL PROCESS
+// ADDR. 10-49 ARE USED BY PROGRAM 1
+// ADDR. 50-99 ARE USED BY PROGRAM 2
+
+100	51360	// move constant 9 into R3
+101	9	// constant 9
+102	51260	// move constant 10 into R2
+103	10	// constant 10
+104	124000	// system call 4 - allocate memory
+105	71000	// if output R0 is negative...
+106	130	// goto 130 (exit1, halt)
+107	51511	// move R1 into R5
+108	51611	// move R1 into R6
+109	128000	// LOOP1: system call 8 - record character
+110	71000	// if output R0 is negative...
+111	129	// goto 129 (exit2, free memory)
+112	53511	// move R1 into RAM[R5], then increment R5
+113	21360	// subtract constant 1 from R3
+114	1	// constant 1
+115	81300	// if R3 is > 0, repeat at LOOP1
+116	109	// LOOP1 addr.
+117	51360	// move constant 9 into R3
+118	9	// constant 9
+119	51516	// move R6 into R5
+120	51135	// move (R5)++ into R1
+121	129000	// LOOP2: system call 9 - output character 
+122	71000	// if output R0 is negative...
+123	129	// goto 129 (exit2, free memory)
+124	51135	// move (R5)++ into R1
+125	21360	// subtract constant 1 from R3
+126	1	// constant 1
+127	81300	// if R3 is > 0, repeat at LOOP2
+128	121	// LOOP2 addr.
+129	51116	// move R6 into R1
+130	125000	// system call 5 - free memory
+131	0	// halt instruction
+-1	100	// PC = 100
