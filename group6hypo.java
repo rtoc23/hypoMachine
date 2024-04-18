@@ -8,10 +8,10 @@
 // of computer hardware.
 
 // Ryan O'Connell / 301053966
-// Aisosa Osifo /
+// Aisosa Osifo / 301086430
 // Kevin Pinto /
 
-// HW2 / February 26th 2024 - April 5th 2024
+// HW2 / February 26th 2024 - April 17th 2024
 // Extension of the Homework 1 HYPO Machine, including
 // MTOPS virtual operating system structure.
 
@@ -38,18 +38,25 @@ public class group6hypo {
     final int NOSPACE = -10;
     final int INVALIDSIZE = -11;
     final int INVALIDPID = -12;
+    final int TIMESLICEEXPIRED = -13;
 
     // HW2 // Global constant declarations
     final int EOL = -1;
     final int DefaultPriority = 128;
     final int ReadyState = 1;
+    final int WaitState = 2;
     int processID = 1;
+    final int OSMode = 1;
+    final int UserMode = 2;
+    public boolean shutdownStatus; //Variable to determine if the system is shutting down via ISR shutdown
+    long inputOperationEventCode = 3;
+    long outputOperationEventCode = 4;
 
     // HW2 // Global constants for initializePCB()
     final int NextAddress = 0;
     final int PID = 1;
     final int State = 2;
-    final int WaitReason = 3;
+    int WaitReason = 3;
     final int Priority = 4;
     final int StackStart = 5;
     final int StackSize = 6;
@@ -67,6 +74,7 @@ public class group6hypo {
     final int SPindex = 15;
     final int PCindex = 16;
     final int PSRindex = 17;
+    final long TimeSlice = 200;
 
     ////
     // global hardware variables
@@ -99,14 +107,15 @@ public class group6hypo {
     long MBR;
     long PSR;
     long CLOCK;
-    long GPR[] = new long[8];
-    long RAM[] = new long[10000];
+    long[] GPR = new long[8];
+    long[] RAM = new long[10000];
 
     // HW2 // List declarations
     long RQ = EOL;
     long WQ = EOL;
     long OSFreeList = EOL;
     long userFreeList = EOL;
+
 
     // *****
     // NAME : main()
@@ -129,7 +138,7 @@ public class group6hypo {
     public int main(boolean toFile) throws Exception {
         // Welcome!
         System.out.println("-------------");
-        System.out.println("Group 6 HYPO");
+        System.out.println("Group 6 MTOPS");
         System.out.println("-------------");
 
         // Call and catch program filename
@@ -180,9 +189,81 @@ public class group6hypo {
         dumpMemory("After program execution", 0, 38);
 
         System.out.println("--------------");
+
+
+        // HW2 // Run until shutdown, call initializeSystem() function
+        initializeSystem();
+
+        //Status of the system
+        int status = 0;
+
+        while (!shutdownStatus) {
+            //Check and process interrupts
+            checkAndProcessInterrupt();
+
+            //Dump RQ and WQ
+            System.out.println("RQ: Before CPU Scheduling\n");
+            printGivenQueue((int) RQ);
+            System.out.println("WQ: Before CPU Scheduling\n");
+            printGivenQueue((int) WQ);
+            System.out.println("Dynamic Memory Area before CPU Scheduling\n");
+            dumpMemory("Dynamic Memory Area", 3000, 9999);
+
+            //Select next process from RQ to give CPU
+            long PCBptr = selectFirstFromRQ();
+
+            //Perform restore context using Dispatcher
+            dispatcher((int) PCBptr);
+
+            //Dump RQ
+            System.out.println("RQ: After selecting process from RQ\n");
+            printGivenQueue((int) RQ);
+
+            //Dump running PCB and CPU Context by passing PCBptr as argument
+            printPCB((int) PCBptr);
+
+            //Execute instructions of the running process using the CPU
+            status = (int) CPU();
+
+            //Dump dynamic memory area
+            dumpMemory("Dynamic Memory Area after executing program\n", 3000, 9999);
+
+            //Check return status - reason for giving up CPU
+            if (status == TIMESLICEEXPIRED) {
+                //If timeslice expired, save context and put PCB back in RQ
+                saveContext((int) PCBptr);
+                insertPCBintoReadyQueue((int) PCBptr);
+                PCBptr = EOL;
+            }
+            //If status is process halt or run-time error, terminate process and PCBptr to EOL
+            else if (status == HALT || status < 0) {
+                terminateProcess((int) PCBptr);
+                PCBptr = EOL;
+            }
+            //If status is Start of Input Operation, put PCB in WQ and waitReason to inputOperationEventCode
+            else if (status == inputOperationEventCode) {
+                WaitReason = (int) inputOperationEventCode;
+                insertPCBintoWaitQueue((int) PCBptr);
+                PCBptr = EOL;
+            }
+            //If status is Start of Output Operation, put PCB in WQ and waitReason to outputOperationEventCode
+            else if (status == outputOperationEventCode) {
+                WaitReason = (int) outputOperationEventCode;
+                insertPCBintoWaitQueue((int) PCBptr);
+                PCBptr = EOL;
+            }
+            //If status is invalid, print unknown programming error
+            else {
+                System.out.println("Unknown programming error");
+            }
+        }
+
+        //Print OS is shutting down message
+        System.out.println("OS is shutting down");
+
         printPCB(0);
 
-        return (executionCode);
+        return status;
     }
 
     // *****
@@ -299,7 +380,7 @@ public class group6hypo {
         // Set the size of the block equal to 4000 (fills entire OS mem).
         RAM[(int) OSFreeList + 1] = 4000;
 
-        // createProcess(null program, 0 priority)
+        createProcess("null program", 0);
     }
 
     // *****
@@ -318,10 +399,14 @@ public class group6hypo {
     //	  STACKUNDERFLOW = -9
     // *****
     public long CPU() {
+
+        //Timeleft is the time left in the current time slice
+        long timeLeft = TimeSlice; //Time slice is 200
+
         //// BEGIN FETCH CYCLE
 
-        // While (no error) and (no halt)
-        while (PC >= 0) {
+        // While (no error) and (no halt) and time left is greater than 0...
+        while (PC >= 0 && timeLeft > 0) {
             // If PC address is valid...
             // (Within program area - 0 to 2999)
             if (PC < 3000 && PC > -1) {
@@ -400,7 +485,10 @@ public class group6hypo {
                 // HALT
                 case 0:
                     // Don't end program, end CPU cycle
+                    //Display halt instruction encountered
+                    System.out.println("HALT instruction encountered");
                     CLOCK += 12;
+                    timeLeft -= 12;
                     return (HALT);
 
                 // ADD
@@ -453,6 +541,7 @@ public class group6hypo {
                         RAM[(int) operand1Address] = sum;
 
                     CLOCK += 3;
+                    timeLeft -= 3;
                     break;
 
                 // SUBTRACTION
@@ -505,6 +594,7 @@ public class group6hypo {
                         RAM[(int) operand1Address] = difference;
 
                     CLOCK += 3;
+                    timeLeft -= 3;
                     break;
 
                 // MULTIPLY
@@ -557,6 +647,7 @@ public class group6hypo {
                         RAM[(int) operand1Address] = product;
 
                     CLOCK += 6;
+                    timeLeft -= 6;
                     break;
 
                 // DIVIDE
@@ -615,6 +706,7 @@ public class group6hypo {
                         RAM[(int) operand1Address] = quotient;
 
                     CLOCK += 6;
+                    timeLeft -= 6;
                     break;
 
                 // MOVE
@@ -664,6 +756,7 @@ public class group6hypo {
                         RAM[(int) operand1Address] = operand2Value;
 
                     CLOCK += 2;
+                    timeLeft -= 2;
                     break;
 
                 // BRANCH
@@ -682,6 +775,7 @@ public class group6hypo {
                     }
 
                     CLOCK += 2;
+                    timeLeft -= 2;
                     break;
 
                 // BRANCH ON MINUS
@@ -718,6 +812,7 @@ public class group6hypo {
                         PC = PC + 1;
 
                     CLOCK += 4;
+                    timeLeft -= 4;
                     break;
 
                 // BRANCH ON PLUS
@@ -755,6 +850,7 @@ public class group6hypo {
                         PC = PC + 1;
 
                     CLOCK += 4;
+                    timeLeft -= 4;
                     break;
 
                 // BRANCH ON ZERO
@@ -791,6 +887,7 @@ public class group6hypo {
                         PC = PC + 1;
 
                     CLOCK += 4;
+                    timeLeft -= 4;
                     break;
 
                 // PUSH
@@ -822,6 +919,7 @@ public class group6hypo {
                     RAM[(int) SP] = operand1Value;
 
                     CLOCK += 2;
+                    timeLeft -= 2;
                     break;
 
                 // POP
@@ -853,6 +951,7 @@ public class group6hypo {
                     SP = SP - 1;
 
                     CLOCK += 2;
+                    timeLeft -= 2;
                     break;
 
                 // SYSTEM CALL
@@ -862,9 +961,22 @@ public class group6hypo {
                         return (BADADDRESS);
                     }
 
-                    System.out.println("System Call not implemented.");
+                    //call fetchOperand to get the address and value of the operand
+                    long[] operand1Params = fetchOperand(mode1, operand1);
+
+                    //check if the return code is not 0
+                    if (operand1Params[0] != 0) {
+                        return (BADADDRESS);
+                    } else {
+                        operand1Value = operand1Params[2];
+                        operand1Address = operand1Params[1];
+                    }
+
+                    //Call the system call function using the operand value
+                    systemCall((int) operand1Value);
 
                     CLOCK += 12;
+                    timeLeft -= 12;
                     break;
 
                 // DEFAULT
@@ -1040,7 +1152,7 @@ public class group6hypo {
                 else
                     break;
             }
-            System.out.println("");
+            System.out.println();
         }
 
         // Print clock and psr content
@@ -1134,7 +1246,7 @@ public class group6hypo {
         // RAM[PCBptr + PSRindex] = 0 ---> RAM[PCBptr + 17] = 0
         ////
         for (int i = 0; i < 18; i++)
-            RAM[(int) PCBptr + i] = 0;
+            RAM[PCBptr + i] = 0;
 
         // Set PCB PID field = current processID, then increment
         RAM[PCBptr + PID] = processID++;
@@ -1750,10 +1862,9 @@ public class group6hypo {
                 break;
             case 2: //Shutdown System
                 System.out.println("Shutdown System");
-                ISRshutdownSystem();
                 //Set shutdown status in a global variable to check in main and exit
-
-
+                shutdownStatus = true;
+                ISRshutdownSystem();
                 break;
             case 3: //Input Operation Completion (io_getc)
                 System.out.println("Input Operation Completion (io_getc)");
@@ -1767,8 +1878,6 @@ public class group6hypo {
                 System.out.println("Invalid Interrupt ID");
                 break;
         }
-
-
     }
 
 
@@ -1785,7 +1894,7 @@ public class group6hypo {
 
         //Prompt and read filename
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter the filename: ");
+        System.out.println("Enter the filename of program to run: ");
         String filename = sc.nextLine();
         System.out.println("Filename: " + filename);
 
@@ -1890,67 +1999,67 @@ public class group6hypo {
     // *****
     public void ISRoutputCompletionInterrupt() {
 
-            //Prompt and read PID of the process completing output completion interrupt
-            Scanner sc = new Scanner(System.in);
-            System.out.println("Enter the PID of the process completing output completion interrupt: ");
-            int PID = sc.nextInt();
-            System.out.println("PID: " + PID);
+        //Prompt and read PID of the process completing output completion interrupt
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter the PID of the process completing output completion interrupt: ");
+        int PID = sc.nextInt();
+        System.out.println("PID: " + PID);
 
-            //Search WQ to find the PCB having the given PID
-            int currentPCBptr = (int) WQ;
-            int previousPCBptr = EOL;
+        //Search WQ to find the PCB having the given PID
+        int currentPCBptr = (int) WQ;
+        int previousPCBptr = EOL;
 
-            //While currentPCBptr is not EOL
-            while (currentPCBptr != EOL) {
+        //While currentPCBptr is not EOL
+        while (currentPCBptr != EOL) {
 
-                //If the PID of the current PCB is equal to the given PID
-                if (RAM[currentPCBptr + PID] == PID) {
+            //If the PID of the current PCB is equal to the given PID
+            if (RAM[currentPCBptr + PID] == PID) {
 
-                    //Remove PCB from the WQ
-                    if (previousPCBptr == EOL) {
-                        WQ = RAM[currentPCBptr + NextAddress];
-                    } else {
-                        RAM[previousPCBptr + NextAddress] = RAM[currentPCBptr + NextAddress];
-                    }
-
-                    //Print the character in the GPR of the process
-                    System.out.println("Character in the GPR of the process: " + RAM[currentPCBptr + GPR0]);
-
-                    //Set process state to Ready in the PCB
-                    RAM[currentPCBptr + State] = ReadyState;
-
-                    //Insert PCB into RQ
-                    insertPCBintoReadyQueue(currentPCBptr);
-
-                    return;
+                //Remove PCB from the WQ
+                if (previousPCBptr == EOL) {
+                    WQ = RAM[currentPCBptr + NextAddress];
+                } else {
+                    RAM[previousPCBptr + NextAddress] = RAM[currentPCBptr + NextAddress];
                 }
 
-                //Move to the next PCB in WQ
-                previousPCBptr = currentPCBptr;
-                currentPCBptr = (int) RAM[currentPCBptr + NextAddress];
+                //Print the character in the GPR of the process
+                System.out.println("Character in the GPR of the process: " + RAM[currentPCBptr + GPR0]);
+
+                //Set process state to Ready in the PCB
+                RAM[currentPCBptr + State] = ReadyState;
+
+                //Insert PCB into RQ
+                insertPCBintoReadyQueue(currentPCBptr);
+
+                return;
             }
 
-            //If no match is found in WQ, then search RQ
-            currentPCBptr = (int) RQ;
+            //Move to the next PCB in WQ
+            previousPCBptr = currentPCBptr;
+            currentPCBptr = (int) RAM[currentPCBptr + NextAddress];
+        }
 
-            //While currentPCBptr is not EOL
-            while (currentPCBptr != EOL) {
+        //If no match is found in WQ, then search RQ
+        currentPCBptr = (int) RQ;
 
-                //If the PID of the current PCB is equal to the given PID
-                if (RAM[currentPCBptr + PID] == PID) {
+        //While currentPCBptr is not EOL
+        while (currentPCBptr != EOL) {
 
-                    //Print the character in the GPR of the process
-                    System.out.println("Character in the GPR of the process: " + RAM[currentPCBptr + GPR0]);
+            //If the PID of the current PCB is equal to the given PID
+            if (RAM[currentPCBptr + PID] == PID) {
 
-                    return;
-                }
+                //Print the character in the GPR of the process
+                System.out.println("Character in the GPR of the process: " + RAM[currentPCBptr + GPR0]);
 
-                //Move to the next PCB in RQ
-                currentPCBptr = (int) RAM[currentPCBptr + NextAddress];
+                return;
             }
 
-            //If no matching PCB is found in WQ and RQ, print invalid pid as error message
-            System.out.println("Invalid PID");
+            //Move to the next PCB in RQ
+            currentPCBptr = (int) RAM[currentPCBptr + NextAddress];
+        }
+
+        //If no matching PCB is found in WQ and RQ, print invalid pid as error message
+        System.out.println("Invalid PID");
     }
 
 
@@ -2013,39 +2122,197 @@ public class group6hypo {
     // RTRN : long currentPCBptr
     //        INVALIDPID = -12
     // AUTH	: Kevin Pinto
-    public long SearchAndRemovePCBfromWQ(long pid){
+    public long SearchAndRemovePCBfromWQ(long pid) {
 
-            //Search WQ to find the PCB having the given PID
-            int currentPCBptr = (int) WQ;
-            int previousPCBptr = EOL;
+        //Search WQ to find the PCB having the given PID
+        int currentPCBptr = (int) WQ;
+        int previousPCBptr = EOL;
 
-            //While currentPCBptr is not EOL
-            while (currentPCBptr != EOL) {
+        //While currentPCBptr is not EOL
+        while (currentPCBptr != EOL) {
 
-                //If the PID of the current PCB is equal to the given PID
-                if (RAM[currentPCBptr + PID] == pid) {
+            //If the PID of the current PCB is equal to the given PID
+            if (RAM[currentPCBptr + PID] == pid) {
 
-                    //Remove PCB from the WQ
-                    if (previousPCBptr == EOL) {
-                        WQ = RAM[currentPCBptr + NextAddress];
-                    } else {
-                        RAM[previousPCBptr + NextAddress] = RAM[currentPCBptr + NextAddress];
-                    }
-
-                    //Set the next address of the PCB to EOL and return the PCB pointer
-                    RAM[currentPCBptr + NextAddress] = EOL;
-                    return currentPCBptr;
+                //Remove PCB from the WQ
+                if (previousPCBptr == EOL) {
+                    WQ = RAM[currentPCBptr + NextAddress];
+                } else {
+                    RAM[previousPCBptr + NextAddress] = RAM[currentPCBptr + NextAddress];
                 }
 
-                //Move to the next PCB in WQ
-                previousPCBptr = currentPCBptr;
-                currentPCBptr = (int) RAM[currentPCBptr + NextAddress];
+                //Set the next address of the PCB to EOL and return the PCB pointer
+                RAM[currentPCBptr + NextAddress] = EOL;
+                return currentPCBptr;
             }
 
-            //If no match is found in WQ, then return invalid pid
-            return INVALIDPID;
+            //Move to the next PCB in WQ
+            previousPCBptr = currentPCBptr;
+            currentPCBptr = (int) RAM[currentPCBptr + NextAddress];
+        }
+
+        //If no match is found in WQ, then return invalid pid
+        return INVALIDPID;
     }
 
+
+    // HW2 //
+    // *****
+    // NAME : systemCall()
+    // DESC : Sets system mode to OS upon entry, and returns to user mode upon exit. Only
+    //        implementing mem_alloc and mem_free system calls.
+    // INPT : long systemCallID
+    // OUTP : N/A
+    // RTRN : long status
+    // AUTH	: Kevin Pinto
+    // *****
+    public long systemCall(long systemCallID) {
+
+        //Set PSR to OS mode
+        PSR = OSMode;
+
+        //Declare status variable and set to OK
+        long status = OK;
+
+        //Switch case to handle system calls
+        switch ((int) systemCallID) {
+
+            case 1: //Create Process - user process
+                //Call createProcess method
+//                createProcess("test", DefaultPriority);
+                System.out.println("Create Process System Call Not Implemented");
+                break;
+
+            case 2: //Delete Process
+                System.out.println("Delete Process System Call Not Implemented");
+                break;
+
+            case 3: //Process Inquiry
+                System.out.println("Process Inquiry System Call Not Implemented");
+                break;
+
+            case 4: //Dynamic memory allocation: Allocate user free memory system call
+                status = allocateUserMemory(10);
+                break;
+
+            case 5: //Dynamic memory deallocation: Free user memory system call
+                status = freeUserMemory(3000, 10);
+                break;
+
+            case 6: //Send message to process message queue
+                System.out.println("Msg_Send System Call Not Implemented");
+                break;
+
+            case 7: //Receive message from process message queue
+                System.out.println("Msg_Receive System Call Not Implemented");
+
+            case 8: //io_getc system call
+                status = io_getcSystemCall();
+                break;
+
+            case 9: //io_putc system call
+                status = io_putcSystemCall();
+                break;
+
+            case 10: //Get current clock time
+                System.out.println("Time_Get System Call Not Implemented");
+                break;
+
+            case 11: //Set clock time
+                System.out.println("Time_Set System Call Not Implemented");
+                break;
+
+            default:
+                System.out.println("Invalid System Call ID");
+                break;
+        }
+
+        //Set PSR to User mode
+        PSR = UserMode;
+
+        //Return status
+        return status;
+
+    }
+
+    // HW2 //
+    // *****
+    // NAME : MemAllocSystemCall()
+    // DESC : Allocate memory from user free list. Return status from the function is either the address of
+    //        the allocated memory or an error code.
+    // INPT : N/A
+    // OUTP : N/A
+    // RTRN : GPR0 = address of allocated memory
+    // AUTH	: Kevin Pinto
+    // *****
+    public long MemAllocSystemCall() {
+
+        //Declare long size and set it to GPR2 value
+        long size = GPR[2];
+
+        //Check for size out of range
+        if (size < 0 || size > 6000) {
+            System.out.println("ERROR: Memory size requested is invalid.");
+            return INVALIDSIZE;
+        }
+
+        //Check if size is 1, then bump it to 2
+        if (size == 1) {
+            size = 2;
+        }
+
+        //Set GPR1 to the return value of allocateUserMemory function with size as parameter
+        GPR[1] = allocateUserMemory((int) size);
+
+        //If GPR1 is less than 0 set GPR0 to GPR1, else set GPR0 to OK
+        if (GPR[1] < 0) {
+            GPR[0] = GPR[1];
+        } else {
+            GPR[0] = OK;
+        }
+
+        //Display mem_alloc system call, and parameters GPR0, GPR1, GPR2
+        System.out.println("MemAlloc System Call: GPR0 = " + GPR[0] + ", GPR1 = " + GPR[1] + ", GPR2 = " + GPR[2]);
+
+        //Return GPR0
+        return GPR[0];
+    }
+
+    // HW2 //
+    // *****
+    // NAME : MemFreeSystemCall()
+    // DESC : Return the dynamically allocated memory to the user free list. GPR1 has memory address and GPR2
+    //        has the size of the memory to be released. Return status in GPR0.
+    // INPT : N/A
+    // OUTP : N/A
+    // RTRN : GPR0 = status of the memory free operation
+    // AUTH	: Kevin Pinto
+    // *****
+    public long MemFreeSystemCall() {
+
+        //Declare long size and set it to GPR2 value
+        long size = GPR[2];
+
+        //Check for size out of range
+        if (size < 0 || size > 6000) {
+            System.out.println("ERROR: Memory size requested is invalid.");
+            return INVALIDSIZE;
+        }
+
+        //Check if size is 1, then bump it to 2
+        if (size == 1) {
+            size = 2;
+        }
+
+        //Set GPR0 to the return value of freeUserMemory function with GPR1 and size as parameters
+        GPR[0] = freeUserMemory(GPR1, size);
+
+        //Display mem_free system call, and parameters GPR0, GPR1, GPR2
+        System.out.println("MemFree System Call: GPR0 = " + GPR[0] + ", GPR1 = " + GPR[1] + ", GPR2 = " + GPR[2]);
+
+        //Return GPR0
+        return GPR[0];
+    }
 
     // HW2 //
     // *****
@@ -2056,10 +2323,9 @@ public class group6hypo {
     // RTRN : long inputOperationEventCode
     // AUTH	: Kevin Pinto
     // *****
-    public long io_getcSystemCall(){
+    public long io_getcSystemCall() {
 
         //Return start of input operation event code
-        long inputOperationEventCode = 3;
         return inputOperationEventCode;
     }
 
@@ -2072,10 +2338,9 @@ public class group6hypo {
     // RTRN : long outputOperationEventCode
     // AUTH	: Kevin Pinto
     // *****
-    public long io_putcSystemCall(){
+    public long io_putcSystemCall() {
 
         //Return start of output operation event code
-        long outputOperationEventCode = 4;
         return outputOperationEventCode;
     }
 
