@@ -913,7 +913,18 @@ public class group6hypo {
                         return (STACKUNDERFLOW);
                     }
 
-                    RAM[(int) operand1Address] = RAM[(int) SP];
+                   // If not in register mode, continue as normal
+					if(mode1 != 1)
+					{
+						RAM[(int)operand1Address] = RAM[(int)SP];
+						System.out.println("Popped "+RAM[(int)operand1Address]+" from stack.");
+					}
+					// If in register mode, store in accessed GPR
+					else
+					{
+						GPR[(int)operand1] = RAM[(int)SP];
+						System.out.println("Popped "+GPR[(int)operand1]+" from stack.");
+					}
 
                     SP = SP - 1;
 
