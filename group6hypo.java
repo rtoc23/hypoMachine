@@ -207,7 +207,7 @@ public class group6hypo {
             System.out.println("WQ: Before CPU Scheduling\n");
             printGivenQueue((int) WQ);
             System.out.println("Dynamic Memory Area before CPU Scheduling\n");
-            dumpMemory("Dynamic Memory Area", 3000, 9999);
+            dumpMemory("Dynamic Memory Area", 3000, 3000);
 
             //Select next process from RQ to give CPU
             long PCBptr = selectFirstFromRQ();
@@ -451,7 +451,7 @@ public class group6hypo {
             // Isolate remaining digit
             // Retrieve operand2 as one digit
             long oneDigitInstruction = IR % 10;
-            long operand2 = oneDigitInstruction / 1;
+            long operand2 = oneDigitInstruction;
 
             // If GPR is invalid (outside of 0 - 7)...
             // Bad address error handle:
@@ -503,8 +503,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -516,8 +515,7 @@ public class group6hypo {
                     // Check for errors with model2 and operand2
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand2params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand2params[0] != 0) return (BADADDRESS);
                     else {
                         operand2Value = operand2params[2];
                         operand2Address = operand2params[1];
@@ -527,8 +525,7 @@ public class group6hypo {
                     long sum = operand1Value + operand2Value;
 
                     // If in register mode... (operand is in register)
-                    if (mode1 == 1)
-                        GPR[(int) operand1] = sum;
+                    if (mode1 == 1) GPR[(int) operand1] = sum;
 
                         // If in immediate mode...
                     else if (mode1 == 6) {
@@ -537,8 +534,7 @@ public class group6hypo {
                     }
 
                     // If in any other mode, store sum in RAM at operand 1 position.
-                    else
-                        RAM[(int) operand1Address] = sum;
+                    else RAM[(int) operand1Address] = sum;
 
                     CLOCK += 3;
                     timeLeft -= 3;
@@ -556,8 +552,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -569,8 +564,7 @@ public class group6hypo {
                     // Check for errors with model2 and operand2
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand2params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand2params[0] != 0) return (BADADDRESS);
                     else {
                         operand2Value = operand2params[2];
                         operand2Address = operand2params[1];
@@ -580,8 +574,7 @@ public class group6hypo {
                     long difference = operand1Value - operand2Value;
 
                     // If in register mode... (operand is in register)
-                    if (mode1 == 1)
-                        GPR[(int) operand1] = difference;
+                    if (mode1 == 1) GPR[(int) operand1] = difference;
 
                         // If in immediate mode...
                     else if (mode1 == 6) {
@@ -590,8 +583,7 @@ public class group6hypo {
                     }
 
                     // If in any other mode, store difference in RAM at operand 1 position.
-                    else
-                        RAM[(int) operand1Address] = difference;
+                    else RAM[(int) operand1Address] = difference;
 
                     CLOCK += 3;
                     timeLeft -= 3;
@@ -609,8 +601,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -622,8 +613,7 @@ public class group6hypo {
                     // Check for errors with model2 and operand2
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand2params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand2params[0] != 0) return (BADADDRESS);
                     else {
                         operand2Value = operand2params[2];
                         operand2Address = operand2params[1];
@@ -633,8 +623,7 @@ public class group6hypo {
                     long product = operand1Value * operand2Value;
 
                     // If in register mode... (operand is in register)
-                    if (mode1 == 1)
-                        GPR[(int) operand1] = product;
+                    if (mode1 == 1) GPR[(int) operand1] = product;
 
                         // If in immediate mode...
                     else if (mode1 == 6) {
@@ -643,8 +632,7 @@ public class group6hypo {
                     }
 
                     // If in any other mode, store product in RAM at operand 1 position.
-                    else
-                        RAM[(int) operand1Address] = product;
+                    else RAM[(int) operand1Address] = product;
 
                     CLOCK += 6;
                     timeLeft -= 6;
@@ -662,8 +650,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -675,8 +662,7 @@ public class group6hypo {
                     // Check for errors with model2 and operand2
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand2params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand2params[0] != 0) return (BADADDRESS);
                     else {
                         operand2Value = operand2params[2];
                         operand2Address = operand2params[1];
@@ -692,8 +678,7 @@ public class group6hypo {
                     long quotient = operand1Value / operand2Value;
 
                     // If in register mode... (operand is in register)
-                    if (mode1 == 1)
-                        GPR[(int) operand1] = quotient;
+                    if (mode1 == 1) GPR[(int) operand1] = quotient;
 
                         // If in immediate mode...
                     else if (mode1 == 6) {
@@ -702,8 +687,7 @@ public class group6hypo {
                     }
 
                     // If in any other mode, store quotient in RAM at operand 1 position.
-                    else
-                        RAM[(int) operand1Address] = quotient;
+                    else RAM[(int) operand1Address] = quotient;
 
                     CLOCK += 6;
                     timeLeft -= 6;
@@ -721,8 +705,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -734,16 +717,14 @@ public class group6hypo {
                     // Check for errors with model2 and operand2
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand2params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand2params[0] != 0) return (BADADDRESS);
                     else {
                         operand2Value = operand2params[2];
                         operand2Address = operand2params[1];
                     }
 
                     // If in register mode... (operand is in register)
-                    if (mode1 == 1)
-                        GPR[(int) operand1] = operand2Value;
+                    if (mode1 == 1) GPR[(int) operand1] = operand2Value;
 
                         // If in immediate mode...
                     else if (mode1 == 6) {
@@ -752,8 +733,7 @@ public class group6hypo {
                     }
 
                     // If in any other mode, store sum in RAM at operand 1 position.
-                    else
-                        RAM[(int) operand1Address] = operand2Value;
+                    else RAM[(int) operand1Address] = operand2Value;
 
                     CLOCK += 2;
                     timeLeft -= 2;
@@ -767,8 +747,7 @@ public class group6hypo {
                     // -------------------------------------------------
 
                     // If address is valid, jump to value in that address
-                    if (PC < 3000 && PC > -1)
-                        PC = RAM[(int) PC];
+                    if (PC < 3000 && PC > -1) PC = RAM[(int) PC];
                     else {
                         System.out.println("ERROR: Memory address is unreachable.");
                         return (BADADDRESS);
@@ -790,8 +769,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -800,16 +778,14 @@ public class group6hypo {
                     // If value is less than 0...
                     if (operand1Value < 0) {
                         // ...and address is valid, jump to value in address
-                        if (PC > -1 && PC < 10000)
-                            PC = RAM[(int) PC];
+                        if (PC > -1 && PC < 10000) PC = RAM[(int) PC];
                         else {
                             System.out.println("ERROR: Memory address is unreachable.");
                             return (BADADDRESS);
                         }
                     }
                     // Otherwise step on.
-                    else
-                        PC = PC + 1;
+                    else PC = PC + 1;
 
                     CLOCK += 4;
                     timeLeft -= 4;
@@ -828,8 +804,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -838,16 +813,14 @@ public class group6hypo {
                     // If value is greater than 0...
                     if (operand1Value > 0) {
                         // ...and address is valid, jump to value in address
-                        if (PC > -1 && PC < 10000)
-                            PC = RAM[(int) PC];
+                        if (PC > -1 && PC < 10000) PC = RAM[(int) PC];
                         else {
                             System.out.println("ERROR: Memory address is unreachable.");
                             return (BADADDRESS);
                         }
                     }
                     // Otherwise, step on.
-                    else
-                        PC = PC + 1;
+                    else PC = PC + 1;
 
                     CLOCK += 4;
                     timeLeft -= 4;
@@ -865,8 +838,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -875,16 +847,14 @@ public class group6hypo {
                     // If value is zero...
                     if (operand1Value == 0) {
                         // ...and address is valid, jump to value in address
-                        if (PC > -1 && PC < 10000)
-                            PC = RAM[(int) PC];
+                        if (PC > -1 && PC < 10000) PC = RAM[(int) PC];
                         else {
                             System.out.println("ERROR: Memory address is unreachable.");
                             return (BADADDRESS);
                         }
                     }
                     // Otherwise, step on.
-                    else
-                        PC = PC + 1;
+                    else PC = PC + 1;
 
                     CLOCK += 4;
                     timeLeft -= 4;
@@ -902,8 +872,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -934,8 +903,7 @@ public class group6hypo {
                     // Check for errors with model1 and operand1
                     // If an error comes back, it's a bad address error.
                     // If no error comes through, we can continue (only return OK after operation)
-                    if (operand1params[0] != 0)
-                        return (BADADDRESS);
+                    if (operand1params[0] != 0) return (BADADDRESS);
                     else {
                         operand1Value = operand1params[2];
                         operand1Address = operand1params[1];
@@ -1147,10 +1115,8 @@ public class group6hypo {
         while (addr < end) {
             System.out.print(addr + "\t\t");
             for (int i = 0; i < 10; i++) {
-                if (addr < end)
-                    System.out.print(RAM[addr++] + "\t");
-                else
-                    break;
+                if (addr < end) System.out.print(RAM[addr++] + "\t");
+                else break;
             }
             System.out.println();
         }
@@ -1177,8 +1143,7 @@ public class group6hypo {
 
         // If returned address is negative, error was thrown
         // Return error code (no message needed)
-        if (currentPCBptr < 0)
-            return currentPCBptr;
+        if (currentPCBptr < 0) return currentPCBptr;
 
         // Initialize PCB addresses to 0
         // Set PID, default priority, state to ready, and nextAddr to EOL
@@ -1189,8 +1154,7 @@ public class group6hypo {
 
         // If returned address is negative, error was thrown
         // Return error code (no message needed)
-        if (PCoutput < 0)
-            return PCoutput;
+        if (PCoutput < 0) return PCoutput;
 
         // Allocate stack in user memory block
         // Stack is always size 20
@@ -1273,26 +1237,13 @@ public class group6hypo {
         System.out.println("Printing PCB beginning at index " + PCBptr);
         System.out.println("------------------------------------------------------------------------------------");
         // Headers for the PCB address, next address, PID, state, priority, stack start addr., and stack size
-        System.out.println("Process Info:\tNext PCB Address : " + RAM[PCBptr + NextAddress] +
-                " \\ PID : " + RAM[PCBptr + PID] +
-                " \\ State : " + RAM[PCBptr + State] +
-                " \\ Priority : " + RAM[PCBptr + Priority]);
+        System.out.println("Process Info:\tNext PCB Address : " + RAM[PCBptr + NextAddress] + " \\ PID : " + RAM[PCBptr + PID] + " \\ State : " + RAM[PCBptr + State] + " \\ Priority : " + RAM[PCBptr + Priority]);
         // Print stack information
-        System.out.println("Stack Info:\tStack Address : " + RAM[PCBptr + StackStart] +
-                " \\ Stack Size : " + RAM[PCBptr + StackSize]);
+        System.out.println("Stack Info:\tStack Address : " + RAM[PCBptr + StackStart] + " \\ Stack Size : " + RAM[PCBptr + StackSize]);
         // Print special registers
-        System.out.println("Special Reg.:\tSP : " + RAM[PCBptr + SPindex] +
-                " \\ PC : " + RAM[PCBptr + PCindex] +
-                " \\ PSR : " + RAM[PCBptr + PSRindex]);
+        System.out.println("Special Reg.:\tSP : " + RAM[PCBptr + SPindex] + " \\ PC : " + RAM[PCBptr + PCindex] + " \\ PSR : " + RAM[PCBptr + PSRindex]);
         // Headers for the GPR contents, plus SP and PC
-        System.out.println("GPRs:\t\tG0 : " + RAM[PCBptr + GPR0] +
-                " \\ G1 : " + RAM[PCBptr + GPR1] +
-                " \\ G2 : " + RAM[PCBptr + GPR2] +
-                " \\ G3 : " + RAM[PCBptr + GPR3] +
-                " \\ G4 : " + RAM[PCBptr + GPR4] +
-                " \\ G5 : " + RAM[PCBptr + GPR5] +
-                " \\ G6 : " + RAM[PCBptr + GPR6] +
-                " \\ G7 : " + RAM[PCBptr + GPR7]);
+        System.out.println("GPRs:\t\tG0 : " + RAM[PCBptr + GPR0] + " \\ G1 : " + RAM[PCBptr + GPR1] + " \\ G2 : " + RAM[PCBptr + GPR2] + " \\ G3 : " + RAM[PCBptr + GPR3] + " \\ G4 : " + RAM[PCBptr + GPR4] + " \\ G5 : " + RAM[PCBptr + GPR5] + " \\ G6 : " + RAM[PCBptr + GPR6] + " \\ G7 : " + RAM[PCBptr + GPR7]);
     }
 
     // HW2 //
