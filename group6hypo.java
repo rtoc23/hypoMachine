@@ -8,8 +8,8 @@
 // of computer hardware.
 
 // Ryan O'Connell / 301053966
-// Aisosa Osifo / 301086430
-// Kevin Pinto /
+// Aisosa Osifo /
+// Kevin Pinto / 301086430
 
 // HW2 / February 26th 2024 - April 17th 2024
 // Extension of the Homework 1 HYPO Machine, including
@@ -156,8 +156,7 @@ public class group6hypo {
         // See final declarations
         long outputCode = absoluteLoader(filename);
 
-        if (outputCode < 0)
-            return (int) outputCode;
+        if (outputCode < 0) return (int) outputCode;
 
         // Assign output code to program counter
         PC = outputCode;
@@ -207,7 +206,7 @@ public class group6hypo {
             System.out.println("WQ: Before CPU Scheduling\n");
             printGivenQueue((int) WQ);
             System.out.println("Dynamic Memory Area before CPU Scheduling\n");
-            dumpMemory("Dynamic Memory Area", 3000, 3000);
+            dumpMemory("Dynamic Memory Area", 3000, 9999);
 
             //Select next process from RQ to give CPU
             long PCBptr = selectFirstFromRQ();
